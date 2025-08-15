@@ -1,0 +1,31 @@
+name: Deploy Client Staging
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy files & Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            set -e
+            cd ${{ secrets.APP_DIR }}
+            git pull origin dev
+            /${{ secrets.SSH_USERNAME }}/.bun/bin/bun install
+            sudo rm -rf .next
+            /${{ secrets.SSH_USERNAME }}/.bun/bin/bun run build
+            sudo systemctl restart ${{ secrets.SERVICE_NAME }}

@@ -1,0 +1,33 @@
+import React from 'react';
+
+const IconMentionDate = ({ className, color = '#00C86E' }: { className?: string; color?: string }) => {
+  return (
+    <svg
+      className={className}
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g clipPath="url(#clip0_926_6808)">
+        <path
+          d="M7.91667 1.66797H2.08333C1.6231 1.66797 1.25 2.04106 1.25 2.5013V8.33464C1.25 8.79487 1.6231 9.16797 2.08333 9.16797H7.91667C8.3769 9.16797 8.75 8.79487 8.75 8.33464V2.5013C8.75 2.04106 8.3769 1.66797 7.91667 1.66797Z"
+          stroke={color}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path d="M6.66602 0.832031V2.4987" stroke={color} strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M3.33398 0.832031V2.4987" stroke={color} strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M1.25 4.16797H8.75" stroke={color} strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+      <defs>
+        <clipPath id="clip0_926_6808">
+          <rect width="10" height="10" fill="white" />
+        </clipPath>
+      </defs>
+    </svg>
+  );
+};
+
+export default IconMentionDate;
