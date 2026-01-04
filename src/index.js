@@ -85,13 +85,22 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`\n✨ Backend Server Running on http://localhost:${PORT}`);
   console.log(`📝 API Documentation: http://localhost:${PORT}/api`);
   console.log(`🏥 Health Check: http://localhost:${PORT}/api/health\n`);
 
   // Test database connection
   const pool = require("./config/database");
+
+  // Initialize database schema on startup
+  try {
+    const initializeSchema = require("./database/initializeSchema");
+    await initializeSchema();
+  } catch (error) {
+    console.error("⚠️ Schema initialization warning:", error.message);
+  }
+
   pool
     .getConnection()
     .then((conn) => {
