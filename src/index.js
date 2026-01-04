@@ -45,6 +45,27 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Initialize database endpoint
+app.post("/api/init-db", async (req, res) => {
+  try {
+    console.log("🔄 Running database initialization...");
+    // Import and run initialize
+    const initDb = require("./database/initialize.js");
+    res.json({
+      success: true,
+      message: "Database initialization started",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("❌ Init error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Database initialization failed",
+      error: error.message,
+    });
+  }
+});
+
 // 404 Handler
 app.use((req, res) => {
   res.status(404).json({
