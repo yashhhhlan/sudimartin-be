@@ -89,6 +89,19 @@ app.listen(PORT, () => {
   console.log(`\n✨ Backend Server Running on http://localhost:${PORT}`);
   console.log(`📝 API Documentation: http://localhost:${PORT}/api`);
   console.log(`🏥 Health Check: http://localhost:${PORT}/api/health\n`);
+
+  // Test database connection
+  const pool = require("./config/database");
+  pool
+    .getConnection()
+    .then((conn) => {
+      console.log("✅ Database connected successfully!");
+      conn.release();
+    })
+    .catch((err) => {
+      console.error("⚠️  Database connection warning:", err.message);
+      // Don't crash, let server run anyway for /api/health
+    });
 });
 
 module.exports = app;
