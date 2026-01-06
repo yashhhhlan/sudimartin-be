@@ -94,20 +94,16 @@ app.listen(PORT, async () => {
 
   // Test database connection
   const pool = require("./config/database");
-
-  // Initialize database schema on startup (disabled - create tables manually in Railway UI)
-  console.log(
-    "📌 Note: Database tables must be created manually via Railway Database UI"
-  );
-  console.log(
-    "   Use railway-init.sql as template for CREATE TABLE statements"
-  );
+  const { checkAndMigrate } = require("./database/autoMigration");
 
   pool
     .getConnection()
-    .then((conn) => {
+    .then(async (conn) => {
       console.log("✅ Database connected successfully!");
       conn.release();
+
+      // Run auto-migration to check and update schema
+      await checkAndMigrate();
     })
     .catch((err) => {
       console.error("⚠️  Database connection warning:", err.message);
