@@ -7,8 +7,8 @@ class Family {
    */
   static async create(familyData) {
     const query = `
-      INSERT INTO families (admin_id, nama_keluarga, deskripsi, privacy_type, photo_url)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO families (admin_id, nama_keluarga, deskripsi, privacy_type, access_code, photo_url)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -16,6 +16,7 @@ class Family {
       familyData.nama_keluarga,
       familyData.deskripsi || null,
       familyData.privacy_type || PRIVACY_TYPE.PRIVATE,
+      familyData.access_code || null,
       familyData.photo_url || null,
     ];
 
@@ -135,6 +136,15 @@ class Family {
     const query = "SELECT COUNT(*) as count FROM families WHERE admin_id = ?";
     const [rows] = await pool.execute(query, [adminId]);
     return rows[0].count;
+  }
+
+  /**
+   * Verify access code for a family
+   */
+  static async verifyAccessCode(familyId, accessCode) {
+    const query = "SELECT * FROM families WHERE id = ? AND access_code = ?";
+    const [rows] = await pool.execute(query, [familyId, accessCode]);
+    return rows.length > 0 ? rows[0] : null;
   }
 }
 

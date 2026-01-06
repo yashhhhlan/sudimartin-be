@@ -98,3 +98,4 @@ VALUES (
 -- Verify tables created
 SELECT 'Tables created successfully!' AS status;
 SHOW TABLES;
+

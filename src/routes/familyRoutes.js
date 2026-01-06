@@ -14,7 +14,7 @@ const { PRIVACY_TYPE, HTTP_STATUS, USER_ROLE } = require("../config/constants");
 
 /**
  * POST /api/families - Create a new family (admin only)
- * Body: { nama_keluarga, deskripsi?, privacy_type, photo_url? }
+ * Body: { nama_keluarga, deskripsi?, privacy_type, access_code?, photo_url? }
  */
 router.post("/", verifyToken, async (req, res) => {
   try {
@@ -26,7 +26,8 @@ router.post("/", verifyToken, async (req, res) => {
       });
     }
 
-    const { nama_keluarga, deskripsi, privacy_type, photo_url } = req.body;
+    const { nama_keluarga, deskripsi, privacy_type, access_code, photo_url } =
+      req.body;
 
     if (!nama_keluarga) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -35,11 +36,16 @@ router.post("/", verifyToken, async (req, res) => {
       });
     }
 
+    // Generate access code if not provided (6 digits)
+    const generatedAccessCode =
+      access_code || Math.floor(100000 + Math.random() * 900000).toString();
+
     const family = await Family.create({
       admin_id: req.user.id,
       nama_keluarga,
       deskripsi,
       privacy_type: privacy_type || PRIVACY_TYPE.PRIVATE,
+      access_code: generatedAccessCode,
       photo_url,
     });
 
@@ -647,6 +653,45 @@ router.put("/:id/canvas-layout", verifyToken, async (req, res) => {
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Failed to save canvas layout",
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * POST /api/families/:id/verify-access - Verify access code for a family
+ * Body: { access_code }
+ */
+router.post("/:id/verify-access", async (req, res) => {
+  try {
+    const { access_code } = req.body;
+
+    if (!access_code) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: "Kode akses harus diisi",
+      });
+    }
+
+    const family = await Family.verifyAccessCode(req.params.id, access_code);
+
+    if (!family) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+        success: false,
+        message: "Kode akses salah",
+      });
+    }
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: "Kode akses valid",
+      data: family,
+    });
+  } catch (error) {
+    console.error("Error verifying access code:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Gagal memverifikasi kode akses",
       error: error.message,
     });
   }

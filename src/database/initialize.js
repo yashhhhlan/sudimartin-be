@@ -77,6 +77,7 @@ const setupSQL = `
     nama_keluarga VARCHAR(255) NOT NULL,
     deskripsi TEXT,
     privacy_type ENUM('PUBLIC', 'PRIVATE') DEFAULT 'PRIVATE',
+    access_code VARCHAR(20) COMMENT 'Access code for shared family tree viewing',
     photo_url LONGTEXT,
     canvas_layout_data LONGTEXT COMMENT 'JSON: stores node positions and custom layout',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -84,6 +85,7 @@ const setupSQL = `
     
     INDEX idx_admin_id (admin_id),
     INDEX idx_privacy_type (privacy_type),
+    INDEX idx_access_code (access_code),
     FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
