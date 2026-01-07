@@ -6,6 +6,7 @@ const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const familyRoutes = require("./routes/familyRoutes");
+const personRoutes = require("./routes/personRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5200;
@@ -37,6 +38,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/families", familyRoutes);
+app.use("/api/families", personRoutes); // New Person & Marriage endpoints
 
 // Health check
 app.get("/api/health", (req, res) => {
