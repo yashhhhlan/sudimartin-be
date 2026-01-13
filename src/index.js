@@ -49,6 +49,52 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Setup endpoint - make a user admin (one-time setup for first admin)
+app.post("/api/setup/make-admin/:email", async (req, res) => {
+  try {
+    const pool = require("./config/database");
+    const email = decodeURIComponent(req.params.email);
+
+    // Check if admin already exists
+    const [admins] = await pool.execute(
+      "SELECT COUNT(*) as count FROM users WHERE role = 'admin'"
+    );
+
+    if (admins[0].count > 0) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Admin already exists. This endpoint only works on first setup.",
+      });
+    }
+
+    // Update user to admin
+    const [result] = await pool.execute(
+      "UPDATE users SET role = 'admin', isRoot = TRUE WHERE email = ?",
+      [email]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `User ${email} is now admin`,
+    });
+  } catch (error) {
+    console.error("Setup error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Setup failed",
+      error: error.message,
+    });
+  }
+});
+
 // Initialize database endpoint
 app.post("/api/init-db", async (req, res) => {
   try {
@@ -122,13 +168,7 @@ app.post("/api/init-db", async (req, res) => {
         keterangan TEXT,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         
-        INDEX idx_email (email),
         INDEX idx_role (role),
-        INDEX idx_isRoot (isRoot),
-        INDEX idx_ayahId (ayahId),
-        INDEX idx_ibuId (ibuId),
-        INDEX idx_pasanganId (pasanganId),
-        
         FOREIGN KEY (ayahId) REFERENCES users(id) ON DELETE SET NULL,
         FOREIGN KEY (ibuId) REFERENCES users(id) ON DELETE SET NULL,
         FOREIGN KEY (pasanganId) REFERENCES users(id) ON DELETE SET NULL
