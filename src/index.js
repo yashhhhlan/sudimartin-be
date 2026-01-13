@@ -82,6 +82,39 @@ app.post("/api/setup/make-admin/:email", async (req, res) => {
   }
 });
 
+// Setup endpoint - make a user admin by ID
+app.post("/api/setup/make-admin-by-id/:userId", async (req, res) => {
+  try {
+    const pool = require("./config/database");
+    const userId = req.params.userId;
+
+    // Update user to admin
+    const [result] = await pool.execute(
+      "UPDATE users SET role = 'admin', isRoot = TRUE WHERE id = ?",
+      [userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `User ID ${userId} is now admin`,
+    });
+  } catch (error) {
+    console.error("Setup error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Setup failed",
+      error: error.message,
+    });
+  }
+});
+
 // Initialize database endpoint
 app.post("/api/init-db", async (req, res) => {
   try {
