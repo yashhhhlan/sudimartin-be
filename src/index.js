@@ -55,26 +55,55 @@ app.post("/api/init-db", async (req, res) => {
     console.log("🔄 Running database initialization...");
 
     const mysql = require("mysql2/promise");
-    const databaseName = process.env.DB_NAME || "sql12814227";
 
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || "localhost",
-      user: process.env.DB_USER || "root",
-      password: process.env.DB_PASSWORD || "root1234",
-      multipleStatements: true,
-    });
+    let connConfig;
 
-    const setupSQL = `
-      CREATE DATABASE IF NOT EXISTS ${databaseName}
-      CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    // Use DATABASE_URL if available (Railway MySQL), otherwise use individual env vars
+    if (process.env.DATABASE_URL) {
+      const url = new URL(process.env.DATABASE_URL);
+      connConfig = {
+        host: url.hostname,
+        user: url.username,
+        password: url.password,
+        port: url.port || 3306,
+      };
+    } else {
+      connConfig = {
+        host: process.env.DB_HOST || "localhost",
+        user: process.env.DB_USER || "root",
+        password: process.env.DB_PASSWORD || "root1234",
+      };
+    }
 
-      USE ${databaseName};
+    const connection = await mysql.createConnection(connConfig);
+    const databaseName = process.env.DATABASE_URL
+      ? new URL(process.env.DATABASE_URL).pathname.slice(1)
+      : process.env.DB_NAME || "tree_family_db";
 
-      DROP TABLE IF EXISTS relationships;
-      DROP TABLE IF EXISTS family_members;
-      DROP TABLE IF EXISTS families;
-      DROP TABLE IF EXISTS users;
+    // Create database
+    await connection.query(
+      `CREATE DATABASE IF NOT EXISTS \`${databaseName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
+    );
+    console.log("✅ Database created/exists");
 
+    // Switch to database
+    await connection.query(`USE \`${databaseName}\``);
+
+    // Drop existing tables
+    const dropStatements = [
+      "DROP TABLE IF EXISTS relationships",
+      "DROP TABLE IF EXISTS family_members",
+      "DROP TABLE IF EXISTS families",
+      "DROP TABLE IF EXISTS users",
+    ];
+
+    for (const stmt of dropStatements) {
+      await connection.query(stmt);
+      console.log("✅", stmt);
+    }
+
+    // Create users table
+    await connection.query(`
       CREATE TABLE users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         namaDepan VARCHAR(100) NOT NULL,
@@ -104,8 +133,12 @@ app.post("/api/init-db", async (req, res) => {
         FOREIGN KEY (ayahId) REFERENCES users(id) ON DELETE SET NULL,
         FOREIGN KEY (ibuId) REFERENCES users(id) ON DELETE SET NULL,
         FOREIGN KEY (pasanganId) REFERENCES users(id) ON DELETE SET NULL
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    console.log("✅ Created users table");
 
+    // Create families table
+    await connection.query(`
       CREATE TABLE families (
         id INT AUTO_INCREMENT PRIMARY KEY,
         admin_id INT NOT NULL,
@@ -122,8 +155,12 @@ app.post("/api/init-db", async (req, res) => {
         INDEX idx_privacy_type (privacy_type),
         INDEX idx_access_code (access_code),
         FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    console.log("✅ Created families table");
 
+    // Create family_members table
+    await connection.query(`
       CREATE TABLE family_members (
         id INT AUTO_INCREMENT PRIMARY KEY,
         family_id INT NOT NULL,
@@ -157,8 +194,12 @@ app.post("/api/init-db", async (req, res) => {
         INDEX idx_status (status),
         FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    console.log("✅ Created family_members table");
 
+    // Create relationships table
+    await connection.query(`
       CREATE TABLE relationships (
         id INT AUTO_INCREMENT PRIMARY KEY,
         family_id INT NOT NULL,
@@ -182,24 +223,19 @@ app.post("/api/init-db", async (req, res) => {
         FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE CASCADE,
         FOREIGN KEY (member1_id) REFERENCES family_members(id) ON DELETE CASCADE,
         FOREIGN KEY (member2_id) REFERENCES family_members(id) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    console.log("✅ Created relationships table");
 
+    // Insert default admin user
+    await connection.query(`
       INSERT INTO users (namaDepan, namaBelakang, email, password, role, isRoot)
       VALUES ('Admin', 'System', 'admin@family.com', '$2a$10$Zp3IKNVh8N6c0Z.F6v6mxO0B6.DfPnYkDM5mKvFZE5X4KzJ2O2YdG', 'admin', TRUE)
-      ON DUPLICATE KEY UPDATE password = '$2a$10$Zp3IKNVh8N6c0Z.F6v6mxO0B6.DfPnYkDM5mKvFZE5X4KzJ2O2YdG';
-    `;
-
-    // Execute all SQL statements
-    const statements = setupSQL.split(";").filter((s) => s.trim());
-    for (const statement of statements) {
-      if (statement.trim()) {
-        await connection.query(statement);
-        console.log("✅ Executed:", statement.substring(0, 50) + "...");
-      }
-    }
+      ON DUPLICATE KEY UPDATE password = '$2a$10$Zp3IKNVh8N6c0Z.F6v6mxO0B6.DfPnYkDM5mKvFZE5X4KzJ2O2YdG'
+    `);
+    console.log("✅ Created default admin user");
 
     await connection.end();
-
     console.log("✅ Database initialization completed!");
 
     res.json({
