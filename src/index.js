@@ -120,8 +120,7 @@ app.post("/api/init-db", async (req, res) => {
         ibuId INT,
         pasanganId INT,
         keterangan TEXT,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         
         INDEX idx_email (email),
         INDEX idx_role (role),
@@ -148,8 +147,7 @@ app.post("/api/init-db", async (req, res) => {
         access_code VARCHAR(20),
         photo_url LONGTEXT,
         canvas_layout_data LONGTEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         
         INDEX idx_admin_id (admin_id),
         INDEX idx_privacy_type (privacy_type),
@@ -185,8 +183,7 @@ app.post("/api/init-db", async (req, res) => {
         contact_address TEXT,
         node_position_x FLOAT DEFAULT 0,
         node_position_y FLOAT DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         
         INDEX idx_family_id (family_id),
         INDEX idx_user_id (user_id),
@@ -213,8 +210,7 @@ app.post("/api/init-db", async (req, res) => {
         connector_y1 FLOAT,
         connector_x2 FLOAT,
         connector_y2 FLOAT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         
         INDEX idx_family_id (family_id),
         INDEX idx_member1_id (member1_id),
