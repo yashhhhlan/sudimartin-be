@@ -49,6 +49,7 @@ CREATE TABLE families (
   nama_keluarga VARCHAR(255) NOT NULL,
   deskripsi TEXT,
   privacy_type ENUM('PUBLIC', 'PRIVATE') DEFAULT 'PRIVATE',
+  access_code VARCHAR(20),
   photo_url LONGTEXT,
   canvas_layout_data LONGTEXT COMMENT 'JSON: stores node positions and custom layout',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
