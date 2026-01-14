@@ -241,6 +241,8 @@ app.post("/api/init-db", async (req, res) => {
         contact_phone VARCHAR(20),
         contact_email VARCHAR(100),
         contact_address TEXT,
+        ayah_id INT,
+        ibu_id INT,
         node_position_x FLOAT DEFAULT 0,
         node_position_y FLOAT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -249,8 +251,12 @@ app.post("/api/init-db", async (req, res) => {
         INDEX idx_user_id (user_id),
         INDEX idx_generation (generation),
         INDEX idx_status (status),
+        INDEX idx_ayah_id (ayah_id),
+        INDEX idx_ibu_id (ibu_id),
         FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE CASCADE,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+        FOREIGN KEY (ayah_id) REFERENCES family_members(id) ON DELETE SET NULL,
+        FOREIGN KEY (ibu_id) REFERENCES family_members(id) ON DELETE SET NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     console.log("✅ Created family_members table");
