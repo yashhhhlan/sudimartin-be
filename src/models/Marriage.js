@@ -2,35 +2,27 @@ const pool = require("../config/database");
 
 class Marriage {
   /**
-   * Create a new marriage
+   * Create a new marriage (REVISI KE-2)
    */
   static async create(marriageData) {
     const query = `
       INSERT INTO marriages (
-        family_id, suami_id, istri_id, 
-        tanggal_menikah, tempat_menikah,
-        tanggal_cerai, tempat_cerai,
-        status_perkawinan, catatan
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        family_id, suami_id, istri_id, status
+      ) VALUES (?, ?, ?, ?)
     `;
 
     const values = [
       marriageData.family_id,
-      marriageData.suami_id,
-      marriageData.istri_id,
-      marriageData.tanggal_menikah || null,
-      marriageData.tempat_menikah || null,
-      marriageData.tanggal_cerai || null,
-      marriageData.tempat_cerai || null,
-      marriageData.status_perkawinan || "Menikah",
-      marriageData.catatan || null,
+      marriageData.suami_id || null,
+      marriageData.istri_id || null,
+      marriageData.status || "MENIKAH",
     ];
 
     const [result] = await pool.execute(query, values);
     return {
       id: result.insertId,
       ...marriageData,
-      status_perkawinan: marriageData.status_perkawinan || "Menikah",
+      status: marriageData.status || "MENIKAH",
       created_at: new Date(),
     };
   }
@@ -50,13 +42,13 @@ class Marriage {
   static async findByFamilyId(familyId) {
     const query = `
       SELECT m.*, 
-        ps.nama_lengkap as nama_suami,
-        pi.nama_lengkap as nama_istri
+        ps.nama_depan as nama_suami, ps.nama_belakang as nama_belakang_suami,
+        pi.nama_depan as nama_istri, pi.nama_belakang as nama_belakang_istri
       FROM marriages m
-      LEFT JOIN persons ps ON m.suami_id = ps.id
-      LEFT JOIN persons pi ON m.istri_id = pi.id
+      LEFT JOIN family_members ps ON m.suami_id = ps.id
+      LEFT JOIN family_members pi ON m.istri_id = pi.id
       WHERE m.family_id = ?
-      ORDER BY m.tanggal_menikah DESC
+      ORDER BY m.created_at DESC
     `;
     const [rows] = await pool.execute(query, [familyId]);
     return rows;
@@ -68,21 +60,21 @@ class Marriage {
   static async findByPersonId(personId) {
     const query = `
       SELECT m.*, 
-        ps.nama_lengkap as nama_suami,
-        pi.nama_lengkap as nama_istri,
+        ps.nama_depan as nama_suami, ps.nama_belakang as nama_belakang_suami,
+        pi.nama_depan as nama_istri, pi.nama_belakang as nama_belakang_istri,
         CASE 
           WHEN m.suami_id = ? THEN pi.id
           ELSE ps.id
         END as pasangan_id,
         CASE 
-          WHEN m.suami_id = ? THEN pi.nama_lengkap
-          ELSE ps.nama_lengkap
+          WHEN m.suami_id = ? THEN CONCAT(pi.nama_depan, ' ', COALESCE(pi.nama_belakang, ''))
+          ELSE CONCAT(ps.nama_depan, ' ', COALESCE(ps.nama_belakang, ''))
         END as nama_pasangan
       FROM marriages m
-      LEFT JOIN persons ps ON m.suami_id = ps.id
-      LEFT JOIN persons pi ON m.istri_id = pi.id
+      LEFT JOIN family_members ps ON m.suami_id = ps.id
+      LEFT JOIN family_members pi ON m.istri_id = pi.id
       WHERE m.suami_id = ? OR m.istri_id = ?
-      ORDER BY m.tanggal_menikah DESC
+      ORDER BY m.created_at DESC
     `;
     const [rows] = await pool.execute(query, [
       personId,

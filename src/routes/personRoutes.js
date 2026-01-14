@@ -288,12 +288,30 @@ router.post("/:id/marriages", verifyToken, async (req, res) => {
       });
     }
 
-    const { suami_id, istri_id } = req.body;
+    const { suami_id, istri_id, status } = req.body;
 
-    if (!suami_id || !istri_id) {
+    // At least one of suami_id or istri_id must be provided
+    if (!suami_id && !istri_id) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        message: "suami_id and istri_id are required",
+        message: "At least one of suami_id or istri_id is required",
+      });
+    }
+
+    // Status is required
+    if (!status) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: "Status is required",
+      });
+    }
+
+    // Validate status value
+    const validStatus = ["MENIKAH", "CERAI HIDUP", "CERAI MATI"];
+    if (!validStatus.includes(status)) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: "Invalid status value",
       });
     }
 

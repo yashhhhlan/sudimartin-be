@@ -157,6 +157,7 @@ app.post("/api/init-db", async (req, res) => {
 
     // Drop existing tables
     const dropStatements = [
+      "DROP TABLE IF EXISTS marriages",
       "DROP TABLE IF EXISTS relationships",
       "DROP TABLE IF EXISTS family_members",
       "DROP TABLE IF EXISTS families",
@@ -217,7 +218,7 @@ app.post("/api/init-db", async (req, res) => {
     `);
     console.log("✅ Created families table");
 
-    // Create family_members table
+    // Create family_members table (REVISI KE-2)
     await connection.query(`
       CREATE TABLE family_members (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -225,31 +226,22 @@ app.post("/api/init-db", async (req, res) => {
         user_id INT,
         nama_depan VARCHAR(100) NOT NULL,
         nama_belakang VARCHAR(100),
-        nama_sapaan VARCHAR(100),
-        gender ENUM('Pria', 'Wanita') DEFAULT 'Pria',
+        nama_panggilan VARCHAR(100) NOT NULL,
+        gender ENUM('M', 'F') DEFAULT 'M',
         tanggal_lahir DATE,
         tempat_lahir VARCHAR(100),
         tanggal_meninggal DATE,
         status ENUM('Hidup', 'Meninggal') DEFAULT 'Hidup',
-        status_menikah VARCHAR(50) DEFAULT 'Single',
-        nama_display VARCHAR(50) DEFAULT 'nama_depan',
-        hubungan_keluarga VARCHAR(50),
-        photo_url LONGTEXT,
-        generation INT DEFAULT 0,
-        pekerjaan VARCHAR(100),
-        biography TEXT,
-        contact_phone VARCHAR(20),
-        contact_email VARCHAR(100),
-        contact_address TEXT,
         ayah_id INT,
         ibu_id INT,
-        node_position_x FLOAT DEFAULT 0,
-        node_position_y FLOAT DEFAULT 0,
+        pekerjaan VARCHAR(100),
+        alamat TEXT,
+        biografi TEXT,
+        photo_url LONGTEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         
         INDEX idx_family_id (family_id),
         INDEX idx_user_id (user_id),
-        INDEX idx_generation (generation),
         INDEX idx_status (status),
         INDEX idx_ayah_id (ayah_id),
         INDEX idx_ibu_id (ibu_id),
@@ -261,33 +253,25 @@ app.post("/api/init-db", async (req, res) => {
     `);
     console.log("✅ Created family_members table");
 
-    // Create relationships table
+    // Create marriages table (REVISI KE-2)
     await connection.query(`
-      CREATE TABLE relationships (
+      CREATE TABLE marriages (
         id INT AUTO_INCREMENT PRIMARY KEY,
         family_id INT NOT NULL,
-        member1_id INT NOT NULL,
-        member2_id INT NOT NULL,
-        relationship_type VARCHAR(50) NOT NULL,
-        direction VARCHAR(20) DEFAULT 'both',
-        custom_label VARCHAR(100),
-        custom_connector BOOLEAN DEFAULT FALSE,
-        connector_x1 FLOAT,
-        connector_y1 FLOAT,
-        connector_x2 FLOAT,
-        connector_y2 FLOAT,
+        suami_id INT,
+        istri_id INT,
+        status ENUM('MENIKAH', 'CERAI HIDUP', 'CERAI MATI') DEFAULT 'MENIKAH',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         
         INDEX idx_family_id (family_id),
-        INDEX idx_member1_id (member1_id),
-        INDEX idx_member2_id (member2_id),
-        INDEX idx_relationship_type (relationship_type),
+        INDEX idx_suami_id (suami_id),
+        INDEX idx_istri_id (istri_id),
         FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE CASCADE,
-        FOREIGN KEY (member1_id) REFERENCES family_members(id) ON DELETE CASCADE,
-        FOREIGN KEY (member2_id) REFERENCES family_members(id) ON DELETE CASCADE
+        FOREIGN KEY (suami_id) REFERENCES family_members(id) ON DELETE SET NULL,
+        FOREIGN KEY (istri_id) REFERENCES family_members(id) ON DELETE SET NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
-    console.log("✅ Created relationships table");
+    console.log("✅ Created marriages table");
 
     // Insert default admin user
     await connection.query(`

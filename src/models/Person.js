@@ -41,12 +41,10 @@ class Person {
   static async create(personData) {
     const query = `
       INSERT INTO family_members (
-        family_id, user_id, nama_depan, nama_belakang, nama_sapaan, gender,
+        family_id, user_id, nama_depan, nama_belakang, nama_panggilan, gender,
         tanggal_lahir, tempat_lahir, tanggal_meninggal, status,
-        ayah_id, ibu_id, pekerjaan, biography,
-        contact_phone, contact_email, contact_address,
-        nama_display, photo_url, node_position_x, node_position_y
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ayah_id, ibu_id, pekerjaan, alamat, biografi, photo_url
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -55,29 +53,24 @@ class Person {
       personData.nama_depan,
       personData.nama_belakang || null,
       personData.nama_panggilan || null,
-      personData.gender || "Pria",
+      personData.gender || "M",
       personData.tanggal_lahir || null,
       personData.tempat_lahir || null,
       personData.tanggal_meninggal || null,
-      personData.status_hidup || "Hidup",
+      personData.status || "Hidup",
       personData.ayah_id || null,
       personData.ibu_id || null,
       personData.pekerjaan || null,
-      personData.biography || null,
-      personData.contact_phone || null,
-      personData.contact_email || null,
-      personData.contact_address || null,
-      personData.nama_display || "nama_depan",
+      personData.alamat || null,
+      personData.biografi || null,
       personData.photo_url || null,
-      personData.node_position_x || 0,
-      personData.node_position_y || 0,
     ];
 
     const [result] = await pool.execute(query, values);
     const newPerson = {
       id: result.insertId,
       ...personData,
-      status: personData.status_hidup || "Hidup",
+      status: personData.status || "Hidup",
       created_at: new Date(),
     };
 
