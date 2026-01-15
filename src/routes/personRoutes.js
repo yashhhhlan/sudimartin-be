@@ -55,12 +55,23 @@ router.post("/:id/persons", verifyToken, async (req, res) => {
       data: person,
     });
   } catch (error) {
-    console.error("Error adding person:", error.message);
-    console.error("Stack trace:", error.stack);
+    console.error("=== ERROR ADDING PERSON ===");
+    console.error("Message:", error.message);
+    console.error("Code:", error.code);
+    console.error("SQL:", error.sql);
+    console.error("SQL State:", error.sqlState);
+    console.error("Full stack:", error.stack);
+    console.error("Request body:", req.body);
+    console.error("Family ID:", req.params.id);
+    console.error("User ID:", req.user?.id);
+    console.error("========================\n");
+
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Failed to add person",
       error: error.message,
+      code: error.code,
+      sqlState: error.sqlState,
     });
   }
 });
