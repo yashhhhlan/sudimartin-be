@@ -37,6 +37,7 @@ class Person {
 
   /**
    * Create a new person
+   * Dynamically builds INSERT query based on available columns in database
    */
   static async create(personData) {
     console.log("[Person.create] Input personData:", personData);
@@ -47,51 +48,111 @@ class Person {
       typeof personData.gender
     );
 
-    const query = `
-      INSERT INTO family_members (
-        family_id, nama_depan, nama_belakang, nama_panggilan, gender,
-        tanggal_lahir, tempat_lahir, tanggal_meninggal, status,
-        ayah_id, ibu_id, pekerjaan, alamat, biografi, photo_url
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    const values = [
-      personData.family_id,
-      personData.nama_depan,
-      personData.nama_belakang || null,
-      personData.nama_panggilan || null,
-      personData.gender || "M",
-      personData.tanggal_lahir || null,
-      personData.tempat_lahir || null,
-      personData.tanggal_meninggal || null,
-      personData.status || "Hidup",
-      personData.ayah_id || null,
-      personData.ibu_id || null,
-      personData.pekerjaan || null,
-      personData.alamat || null,
-      personData.biografi || null,
-      personData.photo_url || null,
+    // List of columns we want to insert (in order of importance)
+    const columnsToInsert = [
+      "family_id",
+      "nama_depan",
+      "nama_belakang",
+      "nama_panggilan",
+      "gender",
+      "tanggal_lahir",
+      "tempat_lahir",
+      "tanggal_meninggal",
+      "status",
+      "ayah_id",
+      "ibu_id",
+      "pekerjaan",
+      "alamat",
+      "biografi",
+      "photo_url",
     ];
 
-    console.log("[Person.create] Final values array[4] (gender):", values[4]);
-    console.log("[Person.create] Full values:", values);
+    // Check which columns actually exist in the table
+    try {
+      const [existingColumns] = await pool.execute(
+        "SHOW COLUMNS FROM family_members"
+      );
+      const availableColumnNames = existingColumns.map((col) => col.Field);
+      console.log(
+        "[Person.create] Available columns in family_members:",
+        availableColumnNames
+      );
 
-    const [result] = await pool.execute(query, values);
+      // Filter to only columns that exist
+      const actualColumns = columnsToInsert.filter((col) =>
+        availableColumnNames.includes(col)
+      );
+      console.log("[Person.create] Columns to insert:", actualColumns);
 
-    // Fetch the newly created person from database
-    const newPersonId = result.insertId;
-    console.log("[Person.create] New person ID:", newPersonId);
+      // Build values array only for columns that exist
+      const values = actualColumns.map((col) => {
+        switch (col) {
+          case "family_id":
+            return personData.family_id;
+          case "nama_depan":
+            return personData.nama_depan;
+          case "nama_belakang":
+            return personData.nama_belakang || null;
+          case "nama_panggilan":
+            return personData.nama_panggilan || null;
+          case "gender":
+            return personData.gender || "M";
+          case "tanggal_lahir":
+            return personData.tanggal_lahir || null;
+          case "tempat_lahir":
+            return personData.tempat_lahir || null;
+          case "tanggal_meninggal":
+            return personData.tanggal_meninggal || null;
+          case "status":
+            return personData.status || "Hidup";
+          case "ayah_id":
+            return personData.ayah_id || null;
+          case "ibu_id":
+            return personData.ibu_id || null;
+          case "pekerjaan":
+            return personData.pekerjaan || null;
+          case "alamat":
+            return personData.alamat || null;
+          case "biografi":
+            return personData.biografi || null;
+          case "photo_url":
+            return personData.photo_url || null;
+          default:
+            return null;
+        }
+      });
 
-    const freshPerson = await this.findById(newPersonId);
+      // Build dynamic INSERT query
+      const columnList = actualColumns.join(", ");
+      const placeholders = actualColumns.map(() => "?").join(", ");
+      const query = `INSERT INTO family_members (${columnList}) VALUES (${placeholders})`;
 
-    if (!freshPerson) {
-      throw new Error("Failed to retrieve newly created person");
+      console.log("[Person.create] Dynamic SQL Query:", query);
+      console.log("[Person.create] Values to insert:", values);
+
+      const [result] = await pool.execute(query, values);
+
+      // Fetch the newly created person from database
+      const newPersonId = result.insertId;
+      console.log("[Person.create] New person ID:", newPersonId);
+
+      const freshPerson = await this.findById(newPersonId);
+
+      if (!freshPerson) {
+        throw new Error("Failed to retrieve newly created person");
+      }
+
+      // Calculate generation dynamically
+      freshPerson.generation = await this.calculateGeneration(newPersonId);
+
+      return freshPerson;
+    } catch (error) {
+      console.error(
+        "[Person.create] Error in dynamic column detection:",
+        error.message
+      );
+      throw error;
     }
-
-    // Calculate generation dynamically
-    freshPerson.generation = await this.calculateGeneration(newPersonId);
-
-    return freshPerson;
   }
 
   /**
