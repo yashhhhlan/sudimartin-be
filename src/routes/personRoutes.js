@@ -39,16 +39,28 @@ router.post("/:id/persons", verifyToken, async (req, res) => {
     const { nama_depan, gender } = req.body;
 
     if (!nama_depan || !gender) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
         message: "nama_depan and gender are required",
       });
     }
 
-    const person = await Person.create({
+    console.log("=== CREATING PERSON ===");
+    console.log("Family ID:", req.params.id);
+    console.log("Request body:", req.body);
+    console.log("Gender value:", gender, "Type:", typeof gender);
+
+    const personData = {
       family_id: req.params.id,
       ...req.body,
-    });
+    };
+
+    console.log("Person data to create:", personData);
+
+    const person = await Person.create(personData);
+
+    console.log("Person created successfully:", person.id);
+    console.log("========================\n");
 
     res.status(HTTP_STATUS.CREATED).json({
       success: true,
