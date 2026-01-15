@@ -792,4 +792,69 @@ router.get("/:id/persons/:personId/children", verifyToken, async (req, res) => {
   }
 });
 
+/**
+ * PUT /api/families/:id/persons/batch/update-gender - Batch update gender for persons missing gender
+ */
+router.put(
+  "/:id/persons/batch/update-gender",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const family = await Family.findById(req.params.id);
+
+      if (!family) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+          success: false,
+          message: "Family not found",
+        });
+      }
+
+      const { updates } = req.body; // Array of { personId, gender }
+
+      if (!Array.isArray(updates) || updates.length === 0) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          message: "updates array is required",
+        });
+      }
+
+      let successCount = 0;
+      const results = [];
+
+      for (const { personId, gender } of updates) {
+        try {
+          const updated = await Person.update(personId, { gender });
+          if (updated) {
+            successCount++;
+            results.push({ personId, success: true, gender });
+          } else {
+            results.push({
+              personId,
+              success: false,
+              error: "Person not found",
+            });
+          }
+        } catch (err) {
+          results.push({ personId, success: false, error: err.message });
+        }
+      }
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        message: `Updated ${successCount} persons`,
+        successCount,
+        totalRequested: updates.length,
+        results,
+      });
+    } catch (error) {
+      console.error("Error in batch update gender:", error);
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Failed to batch update gender",
+        error: error.message,
+      });
+    }
+  }
+);
+
 module.exports = router;

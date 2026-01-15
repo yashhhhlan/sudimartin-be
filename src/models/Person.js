@@ -282,9 +282,6 @@ class Person {
    * Update person
    */
   static async update(personId, personData) {
-    const fields = [];
-    const values = [];
-
     // List of fields that can be updated (matches the schema)
     const allowedFields = [
       "nama_depan",
@@ -303,19 +300,38 @@ class Person {
       "photo_url",
     ];
 
-    for (const [key, value] of Object.entries(personData)) {
-      if (allowedFields.includes(key)) {
-        fields.push(`${key} = ?`);
-        values.push(value);
+    // Check which columns actually exist in the table
+    try {
+      const [existingColumns] = await pool.execute(
+        "SHOW COLUMNS FROM family_members"
+      );
+      const availableColumnNames = existingColumns.map((col) => col.Field);
+
+      const fields = [];
+      const values = [];
+
+      for (const [key, value] of Object.entries(personData)) {
+        if (allowedFields.includes(key) && availableColumnNames.includes(key)) {
+          fields.push(`${key} = ?`);
+          values.push(value);
+        }
       }
+
+      if (fields.length === 0) return false;
+
+      values.push(personId);
+      const query = `UPDATE family_members SET ${fields.join(
+        ", "
+      )} WHERE id = ?`;
+      console.log("[Person.update] Query:", query);
+      console.log("[Person.update] Values:", values);
+
+      const [result] = await pool.execute(query, values);
+      return result.affectedRows > 0;
+    } catch (error) {
+      console.error("[Person.update] Error:", error.message);
+      throw error;
     }
-
-    if (fields.length === 0) return false;
-
-    values.push(personId);
-    const query = `UPDATE family_members SET ${fields.join(", ")} WHERE id = ?`;
-    const [result] = await pool.execute(query, values);
-    return result.affectedRows > 0;
   }
 
   /**
