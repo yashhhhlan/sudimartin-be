@@ -39,6 +39,14 @@ class Person {
    * Create a new person
    */
   static async create(personData) {
+    console.log("[Person.create] Input personData:", personData);
+    console.log(
+      "[Person.create] Gender value:",
+      personData.gender,
+      "Type:",
+      typeof personData.gender
+    );
+
     const query = `
       INSERT INTO family_members (
         family_id, nama_depan, nama_belakang, nama_panggilan, gender,
@@ -65,10 +73,15 @@ class Person {
       personData.photo_url || null,
     ];
 
+    console.log("[Person.create] Final values array[4] (gender):", values[4]);
+    console.log("[Person.create] Full values:", values);
+
     const [result] = await pool.execute(query, values);
 
     // Fetch the newly created person from database
     const newPersonId = result.insertId;
+    console.log("[Person.create] New person ID:", newPersonId);
+
     const freshPerson = await this.findById(newPersonId);
 
     if (!freshPerson) {
