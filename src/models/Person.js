@@ -41,15 +41,14 @@ class Person {
   static async create(personData) {
     const query = `
       INSERT INTO family_members (
-        family_id, user_id, nama_depan, nama_belakang, nama_panggilan, gender,
+        family_id, nama_depan, nama_belakang, nama_panggilan, gender,
         tanggal_lahir, tempat_lahir, tanggal_meninggal, status,
         ayah_id, ibu_id, pekerjaan, alamat, biografi, photo_url
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
       personData.family_id,
-      personData.user_id || null,
       personData.nama_depan,
       personData.nama_belakang || null,
       personData.nama_panggilan || null,
