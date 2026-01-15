@@ -59,6 +59,7 @@ class Person {
       "tempat_lahir",
       "tanggal_meninggal",
       "status",
+      "marital_status",
       "ayah_id",
       "ibu_id",
       "pekerjaan",
@@ -105,6 +106,8 @@ class Person {
             return personData.tanggal_meninggal || null;
           case "status":
             return personData.status || "Hidup";
+          case "marital_status":
+            return personData.marital_status || "LAJANG";
           case "ayah_id":
             return personData.ayah_id || null;
           case "ibu_id":
@@ -292,6 +295,7 @@ class Person {
       "tempat_lahir",
       "tanggal_meninggal",
       "status",
+      "marital_status",
       "ayah_id",
       "ibu_id",
       "pekerjaan",

@@ -30,6 +30,7 @@ async function checkAndMigrate() {
       biografi: "TEXT",
       photo_url: "LONGTEXT",
       status: "VARCHAR(50) DEFAULT 'Hidup'",
+      marital_status: "VARCHAR(50) DEFAULT 'LAJANG'",
       created_at: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
       updated_at:
         "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
