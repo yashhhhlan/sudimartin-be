@@ -821,9 +821,18 @@ router.put(
       let successCount = 0;
       const results = [];
 
+      console.log("[BATCH UPDATE GENDER] Received updates:", updates);
+
       for (const { personId, gender } of updates) {
         try {
+          console.log(
+            `[BATCH UPDATE GENDER] Updating personId ${personId} with gender ${gender}`
+          );
           const updated = await Person.update(personId, { gender });
+          console.log(
+            `[BATCH UPDATE GENDER] Update result for ${personId}:`,
+            updated
+          );
           if (updated) {
             successCount++;
             results.push({ personId, success: true, gender });
@@ -835,6 +844,7 @@ router.put(
             });
           }
         } catch (err) {
+          console.error(`[BATCH UPDATE GENDER] Error for ${personId}:`, err);
           results.push({ personId, success: false, error: err.message });
         }
       }
