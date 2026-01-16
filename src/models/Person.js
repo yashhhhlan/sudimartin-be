@@ -197,10 +197,22 @@ class Person {
       console.log("[Person.findByFamilyId] First row data:", rows[0]);
     }
 
+    // Build person map for generation calculation
+    const personMap = new Map();
+    rows.forEach((person) => {
+      personMap.set(person.id, person);
+    });
+
+    // Calculate generation for each person
+    for (const [id, person] of personMap.entries()) {
+      person.generation = await this.calculateGeneration(id, personMap);
+    }
+
     // Add computed fields to each person
     return rows.map((person) => ({
       ...person,
       isRoot: this.isRoot(person),
+      generation: person.generation,
     }));
   }
 
