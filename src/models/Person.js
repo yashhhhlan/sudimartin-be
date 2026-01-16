@@ -19,10 +19,18 @@ class Person {
     const person = personMap
       ? personMap.get(personId)
       : await this.findById(personId);
-    if (!person) return 0;
+    if (!person) {
+      console.log(`[calculateGeneration] Person ${personId} not found`);
+      return 0;
+    }
 
     // Root: no parents
-    if (this.isRoot(person)) return 1;
+    if (this.isRoot(person)) {
+      console.log(
+        `[calculateGeneration] ${person.nama_depan} (ID: ${personId}) is ROOT → Gen 1`
+      );
+      return 1;
+    }
 
     // Calculate parent generations
     const fatherGen = person.ayah_id
@@ -32,7 +40,12 @@ class Person {
       ? await this.calculateGeneration(person.ibu_id, personMap)
       : 0;
 
-    return Math.max(fatherGen, motherGen) + 1;
+    const result = Math.max(fatherGen, motherGen) + 1;
+    console.log(
+      `[calculateGeneration] ${person.nama_depan} (ID: ${personId}) has parents ayah_id=${person.ayah_id}(gen=${fatherGen}) ibu_id=${person.ibu_id}(gen=${motherGen}) → Gen ${result}`
+    );
+
+    return result;
   }
 
   /**
@@ -169,7 +182,20 @@ class Person {
     const person = rows[0];
     // Add computed fields
     person.isRoot = this.isRoot(person);
-    // Note: generation will be calculated when needed in tree context
+
+    // Calculate generation for this person
+    // If person has parents, generation = max(parent gens) + 1, else 1
+    if (person.ayah_id || person.ibu_id) {
+      const fatherGen = person.ayah_id
+        ? await this.calculateGeneration(person.ayah_id)
+        : 0;
+      const motherGen = person.ibu_id
+        ? await this.calculateGeneration(person.ibu_id)
+        : 0;
+      person.generation = Math.max(fatherGen, motherGen) + 1;
+    } else {
+      person.generation = 1;
+    }
 
     return person;
   }

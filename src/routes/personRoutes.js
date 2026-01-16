@@ -559,6 +559,43 @@ router.put("/:id/marriages/:marriageId", verifyToken, async (req, res) => {
 
     const updatedMarriage = await Marriage.findById(req.params.marriageId);
 
+    // AUTO-UPDATE PERSON STATUS: Jika status marriage berubah, update status_menikah di kedua spouse
+    if (updatedMarriage && req.body.status) {
+      try {
+        const newMaritalStatus =
+          req.body.status === "MENIKAH"
+            ? "Menikah"
+            : req.body.status === "CERAI HIDUP"
+            ? "Cerai Hidup"
+            : req.body.status === "CERAI MATI"
+            ? "Cerai Mati"
+            : "Single";
+
+        if (updatedMarriage.suami_id) {
+          await Person.update(updatedMarriage.suami_id, {
+            status_menikah: newMaritalStatus,
+          });
+          console.log(
+            `✅ Updated suami (${updatedMarriage.suami_id}) status_menikah to "${newMaritalStatus}"`
+          );
+        }
+        if (updatedMarriage.istri_id) {
+          await Person.update(updatedMarriage.istri_id, {
+            status_menikah: newMaritalStatus,
+          });
+          console.log(
+            `✅ Updated istri (${updatedMarriage.istri_id}) status_menikah to "${newMaritalStatus}"`
+          );
+        }
+      } catch (statusErr) {
+        console.warn(
+          "⚠️ Error updating person status_menikah:",
+          statusErr.message
+        );
+        // Don't fail the marriage update
+      }
+    }
+
     res.status(HTTP_STATUS.OK).json({
       success: true,
       message: "Marriage updated successfully",
@@ -626,6 +663,43 @@ router.put(
       }
 
       const updatedMarriage = await Marriage.findById(req.params.marriageId);
+
+      // AUTO-UPDATE PERSON STATUS: Update status_menikah di kedua spouse berdasarkan marriage status
+      if (updatedMarriage) {
+        try {
+          const newMaritalStatus =
+            status_perkawinan === "MENIKAH"
+              ? "Menikah"
+              : status_perkawinan === "CERAI HIDUP"
+              ? "Cerai Hidup"
+              : status_perkawinan === "CERAI MATI"
+              ? "Cerai Mati"
+              : "Single";
+
+          if (updatedMarriage.suami_id) {
+            await Person.update(updatedMarriage.suami_id, {
+              status_menikah: newMaritalStatus,
+            });
+            console.log(
+              `✅ Updated suami (${updatedMarriage.suami_id}) status_menikah to "${newMaritalStatus}"`
+            );
+          }
+          if (updatedMarriage.istri_id) {
+            await Person.update(updatedMarriage.istri_id, {
+              status_menikah: newMaritalStatus,
+            });
+            console.log(
+              `✅ Updated istri (${updatedMarriage.istri_id}) status_menikah to "${newMaritalStatus}"`
+            );
+          }
+        } catch (statusErr) {
+          console.warn(
+            "⚠️ Error updating person status_menikah:",
+            statusErr.message
+          );
+          // Don't fail the marriage update
+        }
+      }
 
       res.status(HTTP_STATUS.OK).json({
         success: true,
