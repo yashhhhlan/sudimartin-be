@@ -97,7 +97,7 @@ class Person {
           case "nama_panggilan":
             return personData.nama_panggilan || null;
           case "gender":
-            return personData.gender || "M";
+            return personData.gender || "Pria";
           case "tanggal_lahir":
             return personData.tanggal_lahir || null;
           case "tempat_lahir":
