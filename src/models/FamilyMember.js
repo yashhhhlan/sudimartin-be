@@ -71,6 +71,10 @@ class FamilyMember {
     `;
     const [rows] = await pool.execute(query, [familyId]);
 
+    console.log(
+      `[FamilyMember.findByFamilyId] Fetching for familyId=${familyId}, found ${rows.length} members`
+    );
+
     // Build person map for generation calculation
     const personMap = new Map();
     rows.forEach((person) => {
@@ -90,8 +94,13 @@ class FamilyMember {
           : 0;
 
       // Generation = max(parent generations) + 1, or 1 if no parents
+      const oldGen = person.generation;
       person.generation =
         fatherGen > 0 || motherGen > 0 ? Math.max(fatherGen, motherGen) + 1 : 1;
+
+      console.log(
+        `  👤 ${person.nama_depan}: ayah_id=${person.ayah_id}, ibu_id=${person.ibu_id} => gen_father=${fatherGen}, gen_mother=${motherGen} => generation=${person.generation}`
+      );
     }
 
     return rows;
