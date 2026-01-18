@@ -60,6 +60,34 @@ router.post("/:id/persons", verifyToken, async (req, res) => {
     const person = await Person.create(personData);
 
     console.log("Person created successfully:", person.id);
+
+    // AUTO-ASSIGN GENERATION based on parents
+    try {
+      const ayah = person.ayah_id
+        ? await Person.findById(person.ayah_id)
+        : null;
+      const ibu = person.ibu_id ? await Person.findById(person.ibu_id) : null;
+
+      let assignedGen = person.generation || 1;
+
+      if (ayah || ibu) {
+        // If has parents, generation = parent's generation + 1
+        const parentGen = ayah?.generation || ibu?.generation || 1;
+        assignedGen = parentGen + 1;
+        console.log(
+          `📊 Auto-assigning generation: ${assignedGen} (parent gen: ${parentGen})`
+        );
+        await Person.update(person.id, { generation: assignedGen });
+      } else if (!person.generation) {
+        // If no parents and no generation specified, assign gen 1
+        console.log(`📊 Auto-assigning generation: 1 (no parents)`);
+        await Person.update(person.id, { generation: 1 });
+      }
+    } catch (genErr) {
+      console.warn("⚠️ Error auto-assigning generation:", genErr.message);
+      // Don't fail - just warn
+    }
+
     console.log("========================\n");
 
     res.status(HTTP_STATUS.CREATED).json({
