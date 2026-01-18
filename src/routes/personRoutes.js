@@ -401,8 +401,9 @@ router.post("/:id/marriages", verifyToken, async (req, res) => {
       ...req.body,
     });
 
-    // AUTO-SYNC GENERATION: Both spouses should have same generation
+    // AUTO-SYNC GENERATION & PARENTS: Both spouses should have same generation
     // This ensures they can have children in the next generation
+    // AND appear together in the tree visualization
     if (suami_id && istri_id) {
       try {
         const suami = await Person.findById(suami_id);
@@ -426,6 +427,29 @@ router.post("/:id/marriages", verifyToken, async (req, res) => {
             if (istriGen !== targetGen) {
               await Person.update(istri_id, { generation: targetGen });
             }
+          }
+
+          // SYNC PARENTS: If one spouse has parents and the other doesn't,
+          // copy the parents so they appear in the same tree location
+          const suamiHasParents = suami.ayah_id || suami.ibu_id;
+          const istriHasParents = istri.ayah_id || istri.ibu_id;
+
+          if (suamiHasParents && !istriHasParents) {
+            console.log(
+              `👨‍👩‍👧 Syncing parents: istri (ID ${istri_id}) now has same parents as suami`
+            );
+            await Person.update(istri_id, {
+              ayah_id: suami.ayah_id || null,
+              ibu_id: suami.ibu_id || null,
+            });
+          } else if (istriHasParents && !suamiHasParents) {
+            console.log(
+              `👨‍👩‍👧 Syncing parents: suami (ID ${suami_id}) now has same parents as istri`
+            );
+            await Person.update(suami_id, {
+              ayah_id: istri.ayah_id || null,
+              ibu_id: istri.ibu_id || null,
+            });
           }
         }
       } catch (syncErr) {
